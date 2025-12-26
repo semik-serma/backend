@@ -1,8 +1,6 @@
-
-
 const isLoggedIn=(req,res,next)=>{
     try {
-        const token=req.cookie
+        const token=req.cookies
         
     } catch (error) {
         res.status(400).json({

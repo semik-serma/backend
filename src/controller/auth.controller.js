@@ -1,46 +1,22 @@
+import { Admin } from "mongodb";
 import { otpmodel } from "../models/otpModel.js";
 import User from "../models/userModels.js";
+import { hashthepassword } from "../utils/bcrypt.js";
 import { otpgenerate } from "../utils/generateOtp.js";
+import { tokengenerate } from "../utils/generatetoken.js";
 import { sendmail } from "../utils/mailer.js";
 import { errorResponse, successResponse } from "../utils/response.js";
+import bcrypt from 'bcrypt'
 
-
-export const registerFirst=async(req,res)=>{
-    try {
-        const {firstname,lastname,email,password,role}=req.body
-        if(!firstname){
-            return errorResponse(res,'pls enter your firstname')
-        }
-        if(!lastname){
-            return errorResponse(res,'pls enter yuour lastname')
-            
-        }
-        if(!email){
-            return errorResponse(res,'pls enter your email')
-        }
-        if(!password){
-           return errorResponse(res,'pls enter your password')
-        }
-        const userexists=await User.findOne({ email })
-        if(userexists){
-            return res.status(400).json({
-                message:"email already exists"
-            })
-        }
-
-
-    } catch (error) {
-        res.status(400).json({
-            message:"error at register",
-            error:error.message
-        })
-    }
-}
 export const registerSecond=async(req,res)=>{
     try {
         const email=req.body.email
         if(!email){
             return errorResponse(res,'email required')
+        }
+        const userfound=await User.findOne({ email })
+        if(userfound){
+            return errorResponse(res,'user already registered')
         }
         const emailotp=await otpmodel.findOne({ email })
         if(emailotp){
@@ -61,7 +37,7 @@ export const registerSecond=async(req,res)=>{
         })
     }
 }
-const verifyuser=async(req,res)=>{
+export const verifyuser=async(req,res)=>{
     try {
         const {email,password,otp,firstname,lastname}=req.body
         if(!email){
@@ -72,16 +48,18 @@ const verifyuser=async(req,res)=>{
             return errorResponse(res,'pls enter your password')
         }
         if(!otp){
-            return errorResponse(res,'find you otp')
+            return errorResponse(res,'enter your otp')
         }
-        const findemail=await User.findOne({ email,otp,isUsed:false})
+        const findemail=await otpmodel.findOne({ email,otp,isUsed:false})
+       
         if(!findemail){
             return errorResponse(res,'cant find') 
         }
+        const hash=await hashthepassword(password)
         await otpmodel.findOneAndUpdate({ email },{ isUsed:true })
         await User.create({
             email:email,
-            password:password,
+            password:hash,
             firstname:firstname,
             lastname:lastname
         })
@@ -92,5 +70,41 @@ const verifyuser=async(req,res)=>{
             message:"error at verifyuser",
             error:error.message
         })
+    }
+}
+
+export const login=async(req,res)=>{
+    try {
+        console.log(req.body)
+        const {email,password}=req.body
+        if(!email){
+            return errorResponse(res,'pls enter your email')
+        }
+        if(!password){
+            return errorResponse(res,'pls enter your password')
+        }
+        const emailfind=await User.findOne({ email })
+        if(!emailfind){
+            return errorResponse(res,'couldnt find your email')
+        }
+        const hash = await hashthepassword(password.trim())
+        const passwordhash = await bcrypt.compare(password.trim(), emailfind.password)
+
+        console.log(passwordhash,emailfind.password,password)
+        if(!passwordhash){
+            return errorResponse(res,'password not matched')
+        }
+        const payload={
+            email:emailfind.email,
+            firstname:emailfind.firstname,
+            role:emailfind.role,
+            lastname:emailfind.lastname,
+        }
+        const token=tokengenerate(payload)
+
+
+        successResponse(res,'logined successfully',{data:payload,token})
+    } catch (error) {
+        errorResponse(res,'error at login',500,error.message)
     }
 }

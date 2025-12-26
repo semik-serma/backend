@@ -5,8 +5,9 @@ export const successResponse = (res, message = 'success', data = {}, status = 20
     });
 };
 
-export const errorResponse=(res,message='error',status=400)=>{
+export const errorResponse=(res,message='error',status=400,error={})=>{
     return res.status(status).json({
-        message
+        message,
+        error
     })
 }
