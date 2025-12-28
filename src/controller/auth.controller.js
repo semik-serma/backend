@@ -108,3 +108,12 @@ export const login=async(req,res)=>{
         errorResponse(res,'error at login',500,error.message)
     }
 }
+
+export const logout=async(req,res)=>{
+    try {
+        res.clearCookie('token')
+        successResponse(res,'logged out successfully')
+    } catch (error) {
+        errorResponse(res,'error at logout',500,error.message)
+    }
+}
