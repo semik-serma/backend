@@ -2,13 +2,14 @@ import express from 'express';
 import { connectdb } from './src/config/db.js';
 import cors from 'cors'
 import route from './src/router/auth.route.js';
+import { articleRoute } from './src/router/article.route.js';
 
 const app=express()
 app.use(express.json())
 app.use(cors())
 connectdb()
 app.use('/auth',route)
-
+app.use('/article',articleRoute)
 
 
 
