@@ -3,6 +3,8 @@ import { connectdb } from './src/config/db.js';
 import cors from 'cors'
 import route from './src/router/auth.route.js';
 import { articleRoute } from './src/router/article.route.js';
+import { commentroute } from './src/router/comment.route.js';
+import { countrydetect } from './src/router/countrydetect.route.js';
 
 const app=express()
 app.use(express.json())
@@ -10,6 +12,8 @@ app.use(cors())
 connectdb()
 app.use('/auth',route)
 app.use('/article',articleRoute)
+app.use('/comment',commentroute)
+app.use('/countrydetect',countrydetect)
 
 
 
