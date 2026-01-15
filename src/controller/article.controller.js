@@ -1,45 +1,63 @@
 import { Article } from "../models/articleModels.js";
+import { uploadToCloudinary } from "../utils/cloudinary.js";
 import { errorResponse, successResponse } from "../utils/response.js";
 
-export const article=async(req,res)=>{
-    const {title,content,author,image}=req.body
-    if(!title){
-        return errorResponse(res,'pls enter a suitable title')
-    }
-    if(!content){
-        return errorResponse(res,'pls enter a suitable content')
-    }
-    if(!author){
-        return errorResponse(res,'pls enter your name')
-    }
-    if(!image){
-        return errorResponse(res,'pls select your image')
-    }
-    const createarticle=await Article.create({
-        title:title,
-        content:content,
-        auther:author,
-        image:image
-    })
-    console.log(createarticle)
-    successResponse(res,'successfully created article')
-}
+export const article = async (req, res) => {
+  try {
+    console.log("FILE:", req.file); // must NOT be undefined
 
-export const updateartcle=async(req,res)=>{
-    const {id}=req.params
-    const {title,content,author,image}=req.body
-    if(!title){
-        return errorResponse(res,'pls enter your title')
+    const { title, content, author } = req.body;
+
+    if (!title || !content || !author) {
+      return errorResponse(res, "All fields are required");
     }
-    if(!content){
-        return errorResponse(res,'pls enter your content')
+
+    if (!req.file) {
+      return errorResponse(res, "Image missing from request");
     }
-    if(!author){
-        return errorResponse(res,'pls enter your name')
+
+    // 🔥 THIS was missing — upload to Cloudinary
+    const result = await uploadToCloudinary(req.file.buffer);
+
+    console.log("CLOUDINARY RESULT:", result.secure_url);
+
+    const article = await Article.create({
+      title,
+      content,
+      author,
+      image: result.secure_url, // now real URL
+    });
+
+    return successResponse(res, "Article created", article);
+  } catch (error) {
+    console.error("UPLOAD ERROR:", error);
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+export const updateArticle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, content, author } = req.body;
+
+    const updateData = { title, content, author };
+
+    if (req.file) {
+      updateData.image = req.file.path; // new Cloudinary image
     }
-    if(!image){
-        return errorResponse(res,'pls select your image')
-    }
-    const findbyid=await Article.findOneAndUpdate(id,{title,content,author,image},{new:true})
-    successResponse(res,'article updated successfully')
-}
+
+    const article = await Article.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (!article) return errorResponse(res, "Article not found");
+
+    successResponse(res, "Article updated", article);
+  } catch (error) {
+    errorResponse(res, "Server error");
+  }
+};

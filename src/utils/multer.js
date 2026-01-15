@@ -1,15 +1,10 @@
-import multer from 'multer'
-import express from 'express'
+import multer from "multer";
 
-const app = express()
-const upload = multer()
+const storage = multer.memoryStorage();
 
-app.post('/profile', upload.single('avatar'), (req, res, next) => {
-    // req.file is the `avatar` file
-    // req.body will hold the text fields, if there were any
-})
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+});
 
-app.post('/photos/upload', upload.array('photos', 12), (req, res, next) => {
-    // req.files is array of `photos` files
-    // req.body will contain the text fields, if there were any
-})
+export default upload;
