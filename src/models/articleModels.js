@@ -8,6 +8,6 @@ const articleSchema = new mongoose.Schema({
     image: { type: String, required: true, }
 });
 
-export const Article = mongoose.model('Article', articleSchema);
+export const Article=mongoose.model('Article', articleSchema);
 
 

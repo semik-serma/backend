@@ -1,9 +1,17 @@
 import express from "express";
-import { article, updateArticle } from "../controller/article.controller.js";
 import upload from "../utils/multer.js";
+import {
+  createArticle,
+  getArticles,
+  updateArticle,
+  deleteArticle,
+} from "../controller/article.controller.js";
 
-export const articleRoute = express.Router();
+const router = express.Router();
 
-articleRoute.post("/createarticle", upload.single("image"), article);
-articleRoute.get('/displayarticle',article)
-articleRoute.put("/updatearticle/:id", upload.single("image"), updateArticle);
+router.post("/create", upload.single("image"), createArticle);
+router.get("/displayarticle", getArticles);
+router.put("/update/:id", upload.single("image"), updateArticle);
+router.delete("/delete/:id", deleteArticle);
+
+export default router;

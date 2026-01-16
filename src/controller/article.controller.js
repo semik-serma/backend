@@ -1,63 +1,64 @@
-import { Article } from "../models/articleModels.js";
-import { uploadToCloudinary } from "../utils/cloudinary.js";
-import { errorResponse, successResponse } from "../utils/response.js";
-
-export const article = async (req, res) => {
+import { Article } from "../models/articleModel.js";
+/* CREATE */
+export const createArticle = async (req, res) => {
   try {
-    console.log("FILE:", req.file); // must NOT be undefined
+    const { title, author, content } = req.body;
+    const image = req.file ? req.file.path : null;
 
-    const { title, content, author } = req.body;
-
-    if (!title || !content || !author) {
-      return errorResponse(res, "All fields are required");
+    if (!title || !author || !content) {
+      return res.status(400).json({ message: "All fields required" });
     }
-
-    if (!req.file) {
-      return errorResponse(res, "Image missing from request");
-    }
-
-    // 🔥 THIS was missing — upload to Cloudinary
-    const result = await uploadToCloudinary(req.file.buffer);
-
-    console.log("CLOUDINARY RESULT:", result.secure_url);
 
     const article = await Article.create({
       title,
-      content,
       author,
-      image: result.secure_url, // now real URL
+      content,
+      image,
     });
 
-    return successResponse(res, "Article created", article);
-  } catch (error) {
-    console.error("UPLOAD ERROR:", error);
-    return res.status(500).json({
-      message: "Server error",
-      error: error.message,
-    });
+    res.status(201).json({ success: true, data: article });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Create failed" });
   }
 };
 
+/* READ */
+export const getArticles = async (req, res) => {
+  try {
+    const articles = await Article.find().sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: articles });
+  } catch (err) {
+    res.status(500).json({ message: "Fetch failed" });
+  }
+};
 
-
-
+/* UPDATE */
 export const updateArticle = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { title, content, author } = req.body;
+    const { title, author, content } = req.body;
 
-    const updateData = { title, content, author };
+    const updateData = { title, author, content };
+    if (req.file) updateData.image = req.file.path;
 
-    if (req.file) {
-      updateData.image = req.file.path; // new Cloudinary image
-    }
+    const article = await Article.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true }
+    );
 
-    const article = await Article.findByIdAndUpdate(id, updateData, { new: true });
+    res.status(200).json({ success: true, data: article });
+  } catch (err) {
+    res.status(500).json({ message: "Update failed" });
+  }
+};
 
-    if (!article) return errorResponse(res, "Article not found");
-
-    successResponse(res, "Article updated", article);
-  } catch (error) {
-    errorResponse(res, "Server error");
+/* DELETE */
+export const deleteArticle = async (req, res) => {
+  try {
+    await Article.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ message: "Delete failed" });
   }
 };
