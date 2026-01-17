@@ -1,22 +1,33 @@
-import { v2 as cloudinary } from "cloudinary";
-import streamifier from "streamifier";
+import { v2 as cloudinary } from 'cloudinary';
+import { CloudinaryStorage } from 'multer-storage-cloudinary';
+import multer from 'multer';
 
-cloudinary.config({
-  cloud_name: "dghmvblkt",
-  api_key: "744943472684582",
-  api_secret: "jjL3PlgvSogdfMUrjSGAcwHgjYU",
-});
 
-export const uploadToCloudinary = (fileBuffer) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: "articles" },
-      (error, result) => {
-        if (error) reject(error);
-        else resolve(result);
-      }
-    );
+    // Configuration
+    cloudinary.config({ 
+      cloud_name: "dghmvblkt",
+      api_key: "744943472684582",
+      api_secret: "jjL3PlgvSogdfMUrjSGAcwHgjYU", // Click 'View API Keys' above to copy your API secret
+    });
+    
+    // Upload an image
+     const uploadResult = await cloudinary.uploader
+       .upload(
+           'https://res.cloudinary.com/demo/image/upload/getting-started/shoes.jpg', {
+               public_id: 'shoes',
+           }
+       )
+       .catch((error) => {
+           console.log(error);
+       })
 
-    streamifier.createReadStream(fileBuffer).pipe(stream);
-  });
-};
+       const storage = new CloudinaryStorage({
+         cloudinary: cloudinary,
+         params: {
+           folder: 'article.controller.js',
+         },
+       });
+        
+       export const upload = multer({ storage: storage });
+        
+      

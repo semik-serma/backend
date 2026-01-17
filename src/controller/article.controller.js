@@ -1,64 +1,134 @@
-import { Article } from "../models/articleModel.js";
-/* CREATE */
+import { Article } from "../models/articleModels.js";
+import { successResponse } from "../utils/response.js";
+
+
 export const createArticle = async (req, res) => {
   try {
-    const { title, author, content } = req.body;
-    const image = req.file ? req.file.path : null;
+    const { title, content, author } = req.body
+    
 
-    if (!title || !author || !content) {
-      return res.status(400).json({ message: "All fields required" });
+    // Validate
+    if (!title || !content || !author) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
+    if (!req.file) {
+      return res.status(400).json({ message: "Image is required" });
+    }
+    console.log(req.file)
     const article = await Article.create({
       title,
-      author,
       content,
-      image,
+      author,
+      image: req.file.path
     });
 
-    res.status(201).json({ success: true, data: article });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Create failed" });
+    res.status(201).json({
+      success: true,
+      message: "Article created",
+      article
+    });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
-/* READ */
+
+
 export const getArticles = async (req, res) => {
   try {
-    const articles = await Article.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: articles });
-  } catch (err) {
-    res.status(500).json({ message: "Fetch failed" });
+    const articles = await Article.find()
+
+    res.json({
+      success: true,
+      count: articles.length,
+      articles
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
-/* UPDATE */
+export const getarticlebyid=async(req,res)=>{
+    try {
+        const id=req.params.id
+        const articlesbyid=await Article.findById(id)
+        successResponse(res,'successfully fetched articlesbyid',articlesbyid)
+    } catch (error) {
+        console.log('error at getarticlesbyid')
+    }
+}
+
+
+
+export const getArticle = async (req, res) => {
+  try {
+    const article = await Article.findById(req.params.id);
+
+    if (!article) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    res.json({
+      success: true,
+      article
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+
 export const updateArticle = async (req, res) => {
   try {
-    const { title, author, content } = req.body;
+    const { title, content, author } = req.body;
 
-    const updateData = { title, author, content };
-    if (req.file) updateData.image = req.file.path;
+    const article = await Article.findById(req.params.id);
 
-    const article = await Article.findByIdAndUpdate(
-      req.params.id,
-      updateData,
-      { new: true }
-    );
+    if (!article) {
+      return res.status(404).json({ message: "Article not found" });
+    }
 
-    res.status(200).json({ success: true, data: article });
-  } catch (err) {
-    res.status(500).json({ message: "Update failed" });
+    article.title = title || article.title;
+    article.content = content || article.content;
+    article.author = author || article.author;
+
+    // If new image uploaded → replace
+    if (req.file) {
+      article.image = req.file.path; // new Cloudinary URL
+    }
+
+    await article.save();
+
+    res.json({
+      success: true,
+      message: "Article updated",
+      article
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };
 
-/* DELETE */
+
+// ================= DELETE ARTICLE =================
 export const deleteArticle = async (req, res) => {
   try {
-    await Article.findByIdAndDelete(req.params.id);
-    res.status(200).json({ success: true });
-  } catch (err) {
-    res.status(500).json({ message: "Delete failed" });
+    const article = await Article.findById(req.params.id);
+
+    if (!article) {
+      return res.status(404).json({ message: "Article not found" });
+    }
+
+    await article.deleteOne();
+
+    res.json({
+      success: true,
+      message: "Article deleted"
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 };

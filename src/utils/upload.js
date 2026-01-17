@@ -1,4 +1,4 @@
-const cloudinary = require('cloudinary').v2;
+import { v2 as cloudinary } from "cloudinary";
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const express = require('express');
 const multer = require('multer');
@@ -14,7 +14,7 @@ const storage = new CloudinaryStorage({
   },
 });
  
-const parser = multer({ storage: storage });
+const upload = multer({ storage: storage });
  
 app.post('/upload', parser.single('image'), function (req, res) {
   res.json(req.file);
