@@ -1,7 +1,10 @@
 import mongoose from "mongoose";
 
-const commentSchema = new mongoose.Schema({
-    comment: { type: String, required: true, Integer: false }
-});
+const commentSchema = new mongoose.Schema(
+  {
+    comment: { type: String, required: true }
+  },
+  { timestamps: true }
+);
 
-export const Comment=mongoose.model("Comment",commentSchema)
+export const Comment = mongoose.model("Comment", commentSchema);

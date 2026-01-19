@@ -7,6 +7,8 @@ import { commentroute } from './src/router/comment.route.js';
 import { countrydetect } from './src/router/countrydetect.route.js';
 import Articleroute from './src/router/article.route.js';
 import { contactroute } from './src/router/contact.route.js';
+import { visitcounter } from './src/controller/visitor.controller.js';
+import { visitorroute } from './src/router/visitor.route.js';
 
 const app=express()
 app.use(express.json())
@@ -17,6 +19,7 @@ app.use('/article',Articleroute)
 app.use('/',commentroute)
 app.use('/countrydetect',countrydetect)
 app.use('/',contactroute)
+app.use('/',visitorroute)
 
 
 
