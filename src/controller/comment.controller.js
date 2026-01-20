@@ -12,7 +12,7 @@ export const beforelogincomment = async (req, res) => {
       });
     }
 
-    const { comment } = req.body;
+    const { comment, userEmail, userName } = req.body;
 
     if (!comment || comment.trim() === '') {
       return res.status(400).json({
@@ -22,7 +22,9 @@ export const beforelogincomment = async (req, res) => {
     }
 
     const commentData = await Comment.create({ 
-      comment: comment.trim() 
+      comment: comment.trim(),
+      userEmail,
+      userName: userName || userEmail?.split('@')[0] || 'Anonymous'
     });
 
     if (successResponse) {
@@ -172,5 +174,94 @@ export const afterlogincommentgetById = async (req, res) => {
       message: "Failed to fetch comment",
       error: error.message,
     });
+  }
+};
+
+export const likeComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userEmail } = req.body;
+
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: "User email required" });
+    }
+
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+
+    // Toggle like
+    const likedIndex = comment.likes.indexOf(userEmail);
+    const dislikedIndex = comment.dislikes.indexOf(userEmail);
+
+    if (likedIndex > -1) {
+      // Already liked, remove it
+      comment.likes.splice(likedIndex, 1);
+    } else {
+      // Add like and remove dislike if exists
+      comment.likes.push(userEmail);
+      if (dislikedIndex > -1) {
+        comment.dislikes.splice(dislikedIndex, 1);
+      }
+    }
+
+    await comment.save();
+    res.status(200).json({ success: true, data: comment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const dislikeComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { userEmail } = req.body;
+
+    if (!userEmail) {
+      return res.status(400).json({ success: false, message: "User email required" });
+    }
+
+    const comment = await Comment.findById(id);
+    if (!comment) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+
+    // Toggle dislike
+    const dislikedIndex = comment.dislikes.indexOf(userEmail);
+    const likedIndex = comment.likes.indexOf(userEmail);
+
+    if (dislikedIndex > -1) {
+      // Already disliked, remove it
+      comment.dislikes.splice(dislikedIndex, 1);
+    } else {
+      // Add dislike and remove like if exists
+      comment.dislikes.push(userEmail);
+      if (likedIndex > -1) {
+        comment.likes.splice(likedIndex, 1);
+      }
+    }
+
+    await comment.save();
+    res.status(200).json({ success: true, data: comment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const incrementView = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const comment = await Comment.findByIdAndUpdate(
+      id,
+      { $inc: { views: 1 } },
+      { new: true }
+    );
+    if (!comment) {
+      return res.status(404).json({ success: false, message: "Comment not found" });
+    }
+    res.status(200).json({ success: true, data: comment });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

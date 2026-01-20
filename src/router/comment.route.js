@@ -6,7 +6,10 @@ import {
   usercommentname,
   afterlogincomments,
   afterlogincommentget,
-  afterlogincommentgetById 
+  afterlogincommentgetById,
+  likeComment,
+  dislikeComment,
+  incrementView
 } from "../controller/comment.controller.js";
 
 export const commentroute = express.Router();
@@ -19,3 +22,6 @@ commentroute.get('/useremail', usercommentname);
 commentroute.post('/afterlogincomment', afterlogincomments);
 commentroute.get('/afterlogincommentsget', afterlogincommentget);
 commentroute.get('/afterlogincomment/:id', afterlogincommentgetById);
+commentroute.post('/comment/:id/like', likeComment);
+commentroute.post('/comment/:id/dislike', dislikeComment);
+commentroute.post('/comment/:id/view', incrementView);

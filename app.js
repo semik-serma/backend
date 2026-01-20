@@ -8,6 +8,7 @@ import Articleroute from './src/router/article.route.js';
 import { contactroute } from './src/router/contact.route.js';
 import { visitcounter } from './src/controller/visitor.controller.js';
 import { visitorroute } from './src/router/visitor.route.js';
+import { userfelingroute } from './src/router/userfeling.route.js';
 
 const app=express()
 app.use(express.json())
@@ -19,7 +20,7 @@ app.use('/',commentroute)
 app.use('/countrydetect',countrydetect)
 app.use('/contact',contactroute)
 app.use('/visit',visitorroute)
-
+app.use('/user',userfelingroute)
 
 
 
